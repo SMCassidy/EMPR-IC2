@@ -72,32 +72,35 @@ def updater():
     sleep(0.2)
 
     global channels
+    try:
+        temp_channels = [light1.getChannels(), \
+                         light2.getChannels(), \
+                         light3.getChannels()]
 
-    temp_channels = [light1.getChannels(), \
-                     light2.getChannels(), \
-                     light3.getChannels()]
+        while True:
 
-    while True:
+            colors = ['','','']
 
-        colors = ['','','']
+            c = lambda r, g, b: '#%02X%02X%02X' % (r,g,b)
 
-        c = lambda r, g, b: '#%02X%02X%02X' % (r,g,b)
+            #Produce hexstring
+            for i in range(3):
+                r = channels[temp_channels[i][0]]
+                g = channels[temp_channels[i][1]]
+                b = channels[temp_channels[i][2]]
+                colors[i] = c(r,g,b)
 
-        #Produce hexstring
-        for i in range(3):
-            r = channels[temp_channels[i][0]]
-            g = channels[temp_channels[i][1]]
-            b = channels[temp_channels[i][2]]
-            colors[i] = c(r,g,b)
+            #Update lights
+            if main_thread.is_alive():
+                with lock:
+                    light1.change(colors[0])
+                    light2.change(colors[1])
+                    light3.change(colors[2])
 
-        #Update lights
-        if main_thread.is_alive():
-            with lock:
-                light1.change(colors[0])
-                light2.change(colors[1])
-                light3.change(colors[2])
+            sleep(0.2)
 
-        sleep(0.2)
+    except:
+        return
 
 lock = Lock()
 
