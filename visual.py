@@ -80,4 +80,10 @@ changer_thread = Thread(target=changer)
 changer_thread.setDaemon(True)
 changer_thread.start()
 
-root.mainloop()
+def main():
+    root.mainloop()
+
+main_thread = Thread(target=main)
+main_thread.setDaemon(True)
+main_thread.start()
+main_thread.join()
