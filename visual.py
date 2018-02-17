@@ -5,6 +5,7 @@ import random
 import Queue
 
 colors = {0:'#FF0000', 1:'#FF7F00', 2:'#FFFF00', 3:'#00FF00', 4:'#0000FF', 5:'#4B0082', 6:'#9400D3'}
+presslock = False
 
 class light(object):
     def __init__(self, color, x1, x2):
@@ -28,6 +29,14 @@ class light(object):
 
 def pressed():                          #function
     #print 'buttons are cool'
+    global presslock
+    if not presslock:
+        lock.acquire()
+        presslock = True
+    else:
+        lock.release()
+        presslock = False
+
     notch = light1.getNotch()
     t.insert(INSERT, 'notch:' + str(notch) + ' button pressed...\n')
     light1.change(colors[notch])
@@ -40,15 +49,16 @@ def changer():
     r = lambda: random.randint(0,255)
     c = lambda: '#%02X%02X%02X' % (r(),r(),r())
     while True:
-        #color = '#%02X%02X%02X' % (r(),r(),r())
-        light1.change(c())
-        light2.change(c())
-        light3.change(c())
-        sleep(0.2)
+        with lock:
+            light1.change(c())
+            light2.change(c())
+            light3.change(c())
+            sleep(0.2)
 
 lock = Lock()
 
 root = Tk()                             #main window
+root.wm_title("DMX-512 Project")
 frame = Frame(root)
 c = Canvas(frame, width=600, height=325, bd=4, bg='#222222')
 frame.pack()
