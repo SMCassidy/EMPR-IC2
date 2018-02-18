@@ -13,22 +13,29 @@ class Main(tk.Frame):
         self.console = Console(self, height=6, width=75, relief="raised", bg='#444444', fg='#BBBBBB')
         self.console.config(highlightbackground="#111111")
         self.pack(fill="both", side="right", expand=True)
-        self.channels = {0:255, 1:128, 2:64, \
-                         3:128, 4:64, 5:255, \
-                         6:64, 7:255, 8:128, }
+        self.channels = { 0:255,  1:255,  2:255,  3:255,  4:255,  5:255, \
+                          6:255,  7:255,  8:255,  9:255, 10:255, 11:255, \
+                         12:255, 13:255, 14:255, 15:255, 16:255, 17:255  }
 
         self.lights = self.light_builder()
-        self.lights[0].change('#DD6666')
-        self.lights[1].change('#66DD66')
-        self.lights[2].change('#6666DD')
+        self.initial_colors = ['#DD6666', '#DD8833', '#DDDD33', \
+                               '#66DD66', '#6666DD', '#DD66DD' ]
+        for i in range(6):
+            self.lights[i].change(self.initial_colors[i])
 
     def light_builder(self):
         x1 = 50
         x2 = 150
+        y = 150
         lights = []
-        initial_channels = [[0,1,2],[3,4,5],[6,7,8]]
-        for i in range(3):
-            lights.append(Light(self, x1,x2, initial_channels[i]))
+        initial_channels = [[0, 1, 2],[ 3, 4, 5],[ 6, 7, 8], \
+                            [9,10,11],[12,13,14],[15,16,17]]
+        for i in range(6):
+            if i == 3:
+                y = 305
+                x1 = 50
+                x2 = 150
+            lights.append(Light(self, x1, x2, y, initial_channels[i]))
             x1 += 205
             x2 += 205
         return lights
@@ -44,10 +51,12 @@ class Main(tk.Frame):
         sleep(0.2)
         r = lambda: randint(0,255)
         while True:
-            for c in self.channels:
-                self.channels[c] = r()
-            sleep(0.2)
-
+            try:
+                for c in self.channels:
+                    self.channels[c] = r()
+                sleep(0.2)
+            except:
+                return
 
     def updater(self):
 
@@ -57,29 +66,24 @@ class Main(tk.Frame):
         '''
 
         try:
-            current_channels = [self.lights[0].getChannels(), \
-                             self.lights[1].getChannels(), \
-                             self.lights[2].getChannels()]
 
             while True:
 
-                colors = ['','','']
+                colors = ['','','','','','']
+
+                current_channels = []
 
                 c = lambda r, g, b: '#%02X%02X%02X' % (r,g,b)
 
-                #Produce hexstring
-                for i in range(3):
+                #Get Light addresses, Produce hexstring, Update light
+                for i in range(len(self.lights)):
+                    current_channels.append(self.lights[i].getChannels())
                     r = self.channels[current_channels[i][0]]
                     g = self.channels[current_channels[i][1]]
                     b = self.channels[current_channels[i][2]]
                     colors[i] = c(r,g,b)
-
-                #Update lights
-                if main_thread.is_alive():
                     with lock:
-                        self.lights[0].change(colors[0])
-                        self.lights[1].change(colors[1])
-                        self.lights[2].change(colors[2])
+                        self.lights[i].change(colors[i])
 
                 sleep(0.2)
 
@@ -88,12 +92,13 @@ class Main(tk.Frame):
 
 
 class Light(object):
-    def __init__(self, parent, x1, x2, channels):
+    def __init__(self, parent, x1, x2, y, channels):
         self.parent = parent
         self.color = ''
         self.channels = channels
-        self.stand = self.parent.canvas.create_polygon([x1,225, x1+((x2-x1)/2), 150, x2, 225], width=2,fill='#000000')
-        self.light = self.parent.canvas.create_oval(x1, 100, x2, 200, fill="white", outline='black', width=7)
+        yl = y - 125
+        self.stand = self.parent.canvas.create_polygon([x1,y, x1+((x2-x1)/2), y-75, x2, y], width=2,fill='#000000')
+        self.light = self.parent.canvas.create_oval(x1, yl, x2, yl+100, fill="white", outline='black', width=7)
 
     def change(self,color):
         self.parent.canvas.itemconfig(self.light,fill=color)
@@ -108,6 +113,7 @@ class Light(object):
 class ControlPanel(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         global lock
+        lock.acquire()
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.pack(fill="both", expand=True, side="left")
@@ -126,7 +132,8 @@ class ControlPanel(tk.Frame):
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
-        lock.acquire()
+        test = tk.Button(self,text="Test", command=self.Test)
+        test.pack(fill="x")
 
     def gen_begin(self):
         global lock
@@ -136,6 +143,8 @@ class ControlPanel(tk.Frame):
             self.presslock = False
             self.parent.main.console.insert_text('Random colours...')
 
+    def Test(self):
+        self.parent.main.console.insert_text(str(len(self.parent.main.lights)))
 
     def Pressed(self):
         global lock
