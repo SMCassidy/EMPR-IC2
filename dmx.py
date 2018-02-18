@@ -4,13 +4,16 @@ from threading import Thread, Lock
 from time import sleep
 from random import randint
 
+LIGHTS = 6
+
 class Main(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.canvas = Canvas(self, width=625, height=325, bd=2, bg='#222222')
         self.canvas.config(highlightbackground="#111111")
-        self.console = Console(self, height=6, width=75, relief="raised", bg='#444444', fg='#BBBBBB')
+        self.console = Console(self, height=5, width=75, relief="raised", \
+                                                bg='#444444', fg='#BBBBBB')
         self.console.config(highlightbackground="#111111")
         self.pack(fill="both", side="right", expand=True)
         self.channels = { 0:255,  1:255,  2:255,  3:255,  4:255,  5:255, \
@@ -20,7 +23,7 @@ class Main(tk.Frame):
         self.lights = self.light_builder()
         self.initial_colors = ['#DD6666', '#DD8833', '#DDDD33', \
                                '#66DD66', '#6666DD', '#DD66DD' ]
-        for i in range(6):
+        for i in range(LIGHTS):
             self.lights[i].change(self.initial_colors[i])
 
     def light_builder(self):
@@ -30,7 +33,7 @@ class Main(tk.Frame):
         lights = []
         initial_channels = [[0, 1, 2],[ 3, 4, 5],[ 6, 7, 8], \
                             [9,10,11],[12,13,14],[15,16,17]]
-        for i in range(6):
+        for i in range(LIGHTS):
             if i == 3:
                 y = 305
                 x1 = 50
@@ -39,7 +42,6 @@ class Main(tk.Frame):
             x1 += 205
             x2 += 205
         return lights
-
 
     def generator(self):
 
@@ -66,13 +68,9 @@ class Main(tk.Frame):
         '''
 
         try:
-
             while True:
-
                 colors = ['','','','','','']
-
                 current_channels = []
-
                 c = lambda r, g, b: '#%02X%02X%02X' % (r,g,b)
 
                 #Get Light addresses, Produce hexstring, Update light
@@ -84,12 +82,9 @@ class Main(tk.Frame):
                     colors[i] = c(r,g,b)
                     with lock:
                         self.lights[i].change(colors[i])
-
                 sleep(0.2)
-
         except:
             return
-
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -97,10 +92,12 @@ class Light(object):
         self.color = ''
         self.channels = channels
         yl = y - 125
-        self.stand = self.parent.canvas.create_polygon([x1,y, x1+((x2-x1)/2), y-75, x2, y], width=2,fill='#000000')
-        self.light = self.parent.canvas.create_oval(x1, yl, x2, yl+100, fill="white", outline='black', width=7)
-
+        self.stand = self.parent.canvas.create_polygon([x1,y, x1+((x2-x1)/2), \
+                                          y-75, x2, y], width=2,fill='#000000')
+        self.light = self.parent.canvas.create_oval(x1, yl, x2, yl+100, \
+                                        fill="white", outline='black', width=7)
     def change(self,color):
+        self.color = color
         self.parent.canvas.itemconfig(self.light,fill=color)
 
     def getChannels(self):
@@ -108,7 +105,6 @@ class Light(object):
 
     def setChannels(self, channels):
         self.channels = channels
-
 
 class ControlPanel(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -119,7 +115,8 @@ class ControlPanel(tk.Frame):
         self.pack(fill="both", expand=True, side="left")
         self.presslock = True
         self.gen = False
-        title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, font="bold", bg="black", fg="white")
+        title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, \
+                                    font="bold", bg="black", fg="white")
         title.pack(fill="both")
         title.config(highlightbackground="red")
         w = tk.Label(self, text="Red", bg="red", fg="white")
@@ -134,6 +131,9 @@ class ControlPanel(tk.Frame):
         pause.pack(fill="x")
         test = tk.Button(self,text="Test", command=self.Test)
         test.pack(fill="x")
+        var = tk.StringVar(self)
+        options = ["Light 1","Light 2", "Light 3", "Light 4", "Light 5", "Light 6"]
+        var.set(options[0])
 
     def gen_begin(self):
         global lock
@@ -158,7 +158,6 @@ class ControlPanel(tk.Frame):
             lock.release()
             self.presslock = False
             self.parent.main.console.insert_text('Unpaused...')
-
 
 class Console(tk.Text):
     def __init__(self, parent, *args, **kwargs):
@@ -200,5 +199,5 @@ if __name__ == "__main__":
     main_thread = thread_launch(main_func)
     gen_thread = thread_launch(main_app.main.generator)
     update_thread = thread_launch(main_app.main.updater)
-    #main_app.main.lights[0].change("red")
+
     main_thread.join()
