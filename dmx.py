@@ -5,9 +5,10 @@ class Main(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
-        self.canvas = Canvas(self, width=625, height=325, relief="raised", bg='#222222')
+        self.canvas = Canvas(self, width=625, height=325, bd=2, bg='#222222')
         self.canvas.config(highlightbackground="#111111")
-        self.console = Console(self, height=6, width=75, bd=2, bg='#444444', fg='#BBBBBB')
+        self.console = Console(self, height=6, width=75, relief="raised", bg='#444444', fg='#BBBBBB')
+        self.console.config(highlightbackground="#111111")
         self.pack(fill="both", side="right", expand=True)
 
 class ControlPanel(tk.Frame):
