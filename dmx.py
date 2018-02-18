@@ -18,6 +18,9 @@ class Main(tk.Frame):
                          6:64, 7:255, 8:128, }
 
         self.lights = self.light_builder()
+        self.lights[0].change('#DD6666')
+        self.lights[1].change('#66DD66')
+        self.lights[2].change('#6666DD')
 
     def light_builder(self):
         x1 = 50
@@ -104,10 +107,12 @@ class Light(object):
 
 class ControlPanel(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
+        global lock
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.pack(fill="both", expand=True, side="left")
-        self.presslock = False
+        self.presslock = True
+        self.gen = False
         title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, font="bold", bg="black", fg="white")
         title.pack(fill="both")
         title.config(highlightbackground="red")
@@ -117,19 +122,34 @@ class ControlPanel(tk.Frame):
         w.pack(fill="x", side="bottom")
         w = tk.Label(self, text="Blue", bg="blue", fg="white")
         w.pack(fill="x", side="bottom")
+        gen = tk.Button(self, text="Random", command=self.gen_begin)
+        gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
+        lock.acquire()
+
+    def gen_begin(self):
+        global lock
+        if not self.gen:
+            lock.release()
+            self.gen = True
+            self.presslock = False
+            self.parent.main.console.insert_text('Random colours...')
+
 
     def Pressed(self):
         global lock
+        if self.gen == False:
+            return
         if not self.presslock:
             lock.acquire()
             self.presslock = True
+            self.parent.main.console.insert_text('Paused...')
         else:
             lock.release()
             self.presslock = False
+            self.parent.main.console.insert_text('Unpaused...')
 
-        self.parent.main.console.insert_text('Paused.')
 
 class Console(tk.Text):
     def __init__(self, parent, *args, **kwargs):
