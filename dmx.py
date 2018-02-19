@@ -5,6 +5,7 @@ from time import sleep
 from random import randint
 
 LIGHTS = 6
+TIME = 0.2
 
 class Main(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -50,7 +51,7 @@ class Main(tk.Frame):
         Ideally the dict will be updated by the incoming serial read thread.
         '''
 
-        sleep(0.2)
+        sleep(TIME)
         r = lambda: randint(0,255)
         while True:
             try:
@@ -82,7 +83,7 @@ class Main(tk.Frame):
                     colors[i] = c(r,g,b)
                     with lock:
                         self.lights[i].change(colors[i])
-                sleep(0.2)
+                sleep(TIME)
         except:
             return
 
@@ -165,12 +166,22 @@ class Console(tk.Text):
         self.parent = parent
         self.pack(fill="both", side="bottom")
     def insert_text(self, text):
-        self.insert(6.0, text + '\n')
+        self.insert(1.0, ' ' + text + '\n')
+        self.delete(6.0,7.0)
 
 class Canvas(tk.Canvas):
     def __init__(self, parent, *args, **kwargs):
         tk.Canvas.__init__(self, parent, *args, **kwargs)
         self.pack(fill="both", side="top", expand=True)
+
+class Menu(tk.Frame):
+    def __init__(self, parent, *args, **kwargs):
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.menu = tk.Menu(self)
+        #menubutton = tk.Menubutton(root, text="File", relief="raised")
+        #menubutton.grid()
+        #menubutton.pack()
 
 class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -179,6 +190,9 @@ class MainApplication(tk.Frame):
         self.main = Main(self, width=625, height=350)
         self.main.config(highlightbackground="#111111")
         self.control = ControlPanel(self, bg="#333333")
+        #self.menu = Menu(self)
+        #self.menu.pack()
+
 
 def thread_launch(func):
     thread = Thread(target=func)
