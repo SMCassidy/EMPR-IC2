@@ -26,7 +26,7 @@ class Main(tk.Frame):
         self.initial_colors = ['#DD6666', '#DD8833', '#DDDD33', \
                                '#66DD66', '#6666DD', '#DD66DD' ]
         for i in range(LIGHTS):
-            self.lights[i].change(self.initial_colors[i])
+            self.lights[i].setColor(self.initial_colors[i])
 
         self.q = Queue.Queue() 
 
@@ -85,7 +85,7 @@ class Main(tk.Frame):
                     b = self.channels[current_channels[i][2]]
                     colors[i] = c(r,g,b)
                     with lock:
-                        self.lights[i].change(colors[i])
+                        self.lights[i].setColor(colors[i])
                 sleep(TIME)
         except:
             return
@@ -119,9 +119,12 @@ class Light(object):
                                           y-75, x2, y], width=2,fill='#000000')
         self.light = self.parent.canvas.create_oval(x1, yl, x2, yl+100, \
                                         fill="white", outline='black', width=7)
-    def change(self,color):
+    def setColor(self,color):
         self.color = color
         self.parent.canvas.itemconfig(self.light,fill=color)
+
+    def getColor(self):
+        return self.color
 
     def getChannels(self):
         return self.channels
@@ -159,7 +162,7 @@ class ControlPanel(tk.Frame):
         self.entry_frame = tk.Frame(self)
         self.entry_frame.pack(fill="x", expand=True, side="bottom")
 
-        set_btn = tk.Button(self.entry_frame, text="Set", command=self.Set)
+        set_btn = tk.Button(self.entry_frame, text="Set", command=self.Update)
         set_btn.pack(side="right")
         self.entry = tk.Entry(self.entry_frame)
         self.entry.pack(fill="both")
@@ -171,6 +174,9 @@ class ControlPanel(tk.Frame):
         self.drop = tk.OptionMenu(self.list_frame,self.var, \
                     'Light 1','Light 2', 'Light 3', 'Light 4', 'Light 5', 'Light 6')
         self.drop.grid()
+
+        self.info = tk.Text(self, height=3, width=20,relief="raised", bg='#444444', fg='#BBBBBB')
+        self.info.pack(fill="x", side="bottom")
 
         #We need a text output to show current light, current channels, current colour
 
@@ -192,11 +198,31 @@ class ControlPanel(tk.Frame):
         # should add updated bytes to queue from serial
         #serial_thread = thread_launch(main_app.main.serial) 
 
+    def Update(self):
+       
+        self.Set()
+        
+        light = self.var.get()
+        lightnum = int(light[-1]) - 1
+        
+        self.UpdateInfo('Light ' + str(lightnum) + ':\n'\
+                        'Color:' + str(self.parent.main.lights[lightnum].getColor()) + '\n'\
+                        'Channels:' + str(self.parent.main.lights[lightnum].getChannels()))
+
+
+    def UpdateInfo(self, text):
+        self.info.delete(1.0,3.0)
+        self.info.insert(1.0, text)
+
     def Set(self):
         text = self.entry.get()
         text = text.split(',')
         new_channels = []
         valid = True
+
+        if len(text) > 3:
+            valid = False
+        
         for i in text:
             try:
                 i = int(i)
