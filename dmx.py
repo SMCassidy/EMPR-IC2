@@ -185,8 +185,8 @@ class ControlPanel(tk.Frame):
         valid = True
         for i in text:
             try:
-                int(i)
-                if int(i) < 0 or int(i) > 512:
+                i = int(i)
+                if i < 0 or i > 512:
                     self.parent.main.console.insert_text("Invalid input - channels between 0-512")
                     valid = False
                 new_channels.append(i)
@@ -195,6 +195,7 @@ class ControlPanel(tk.Frame):
                 return
         if valid:
             self.parent.main.console.insert_text("Valid input")
+            self.parent.main.console.insert_text(str(new_channels))
        #update light channels 
 
     def Pressed(self):
