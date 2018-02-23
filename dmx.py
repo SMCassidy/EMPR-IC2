@@ -91,6 +91,12 @@ class Main(tk.Frame):
             return
 
     def queuer(self):
+
+        '''
+        Processes incoming bytes from queue.
+        Adds them to the global channel dict.
+        '''
+        
         while True:
             new_slots = q.get()
             for i in new_slots:
@@ -148,6 +154,8 @@ class ControlPanel(tk.Frame):
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
+        
+
         self.entry_frame = tk.Frame(self)
         self.entry_frame.pack(fill="x", expand=True, side="bottom")
 
@@ -156,9 +164,15 @@ class ControlPanel(tk.Frame):
         self.entry = tk.Entry(self.entry_frame)
         self.entry.pack(fill="both")
 
+        self.list_frame = tk.Frame(self)
+        self.list_frame.pack(fill="x", expand=True)
+       
         var = tk.StringVar(self)
-        options = ["Light 1","Light 2", "Light 3", "Light 4", "Light 5", "Light 6"]
-        var.set(options[0])
+        self.drop = tk.OptionMenu(self.list_frame,var, \
+                    'Light 1','Light 2', 'Light 3', 'Light 4', 'Light 5', 'Light 6')
+        self.drop.grid()
+        #var = tk.StringVar(self)
+        #var.set(options[0])
 
     def gen_begin(self):
         global lock
