@@ -167,12 +167,12 @@ class ControlPanel(tk.Frame):
         self.list_frame = tk.Frame(self)
         self.list_frame.pack(fill="x", expand=True)
        
-        var = tk.StringVar(self)
-        self.drop = tk.OptionMenu(self.list_frame,var, \
+        self.var = tk.StringVar(self)
+        self.drop = tk.OptionMenu(self.list_frame,self.var, \
                     'Light 1','Light 2', 'Light 3', 'Light 4', 'Light 5', 'Light 6')
         self.drop.grid()
-        #var = tk.StringVar(self)
-        #var.set(options[0])
+
+        #We need a text output to show current light, current channels, current colour
 
     def gen_begin(self):
         global lock
@@ -208,9 +208,14 @@ class ControlPanel(tk.Frame):
                 self.parent.main.console.insert_text("Invalid input - only numeric input")
                 return
         if valid:
+            light = self.var.get()
+            lightnum = int(light[-1]) - 1
             self.parent.main.console.insert_text("Valid input")
             self.parent.main.console.insert_text(str(new_channels))
-       #update light channels 
+            self.parent.main.console.insert_text(light)
+            self.parent.main.lights[lightnum].setChannels(new_channels)
+            self.parent.main.console.insert_text("Light " + str(lightnum + 1) + \
+                                    " channels updated to " + str(new_channels))
 
     def Pressed(self):
         global lock
