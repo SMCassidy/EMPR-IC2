@@ -3,6 +3,7 @@ import Tkinter as tk
 from threading import Thread, Lock
 from time import sleep
 from random import randint
+import Queue
 
 LIGHTS = 6
 TIME = 0.2
@@ -26,6 +27,8 @@ class Main(tk.Frame):
                                '#66DD66', '#6666DD', '#DD66DD' ]
         for i in range(LIGHTS):
             self.lights[i].change(self.initial_colors[i])
+
+        self.q = Queue.Queue() 
 
     def light_builder(self):
         x1 = 50
@@ -86,6 +89,19 @@ class Main(tk.Frame):
                 sleep(TIME)
         except:
             return
+
+    def queuer(self):
+        while True:
+            new_slots = q.get()
+            for i in new_slots:
+                continue        #parse and update channels[]
+            q.task_done()
+
+    def serial(self):
+        #access connection
+        while True:
+            new_bytes = '' #read from serial
+            q.put(new_bytes)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -148,6 +164,12 @@ class ControlPanel(tk.Frame):
     def Start(self):
         gen_thread = thread_launch(main_app.main.generator)
         update_thread = thread_launch(main_app.main.updater)
+        
+        # should get changes from queue, update the dict
+        #queuer_thread = thread_launch(main_app.main.queuer) 
+        
+        # should add updated bytes to queue from serial
+        #serial_thread = thread_launch(main_app.main.serial) 
 
     def Pressed(self):
         global lock
