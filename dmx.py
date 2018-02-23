@@ -126,12 +126,13 @@ class ControlPanel(tk.Frame):
         w.pack(fill="x", side="bottom")
         w = tk.Label(self, text="Blue", bg="blue", fg="white")
         w.pack(fill="x", side="bottom")
+        test = tk.Button(self,text="Start", command=self.Start)
+        test.pack(fill="x")
         gen = tk.Button(self, text="Random", command=self.gen_begin)
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
-        test = tk.Button(self,text="Test", command=self.Test)
-        test.pack(fill="x")
+
         var = tk.StringVar(self)
         options = ["Light 1","Light 2", "Light 3", "Light 4", "Light 5", "Light 6"]
         var.set(options[0])
@@ -144,8 +145,9 @@ class ControlPanel(tk.Frame):
             self.presslock = False
             self.parent.main.console.insert_text('Random colours...')
 
-    def Test(self):
-        self.parent.main.console.insert_text(str(len(self.parent.main.lights)))
+    def Start(self):
+        gen_thread = thread_launch(main_app.main.generator)
+        update_thread = thread_launch(main_app.main.updater)
 
     def Pressed(self):
         global lock
@@ -209,9 +211,10 @@ if __name__ == "__main__":
     root.wm_title("DMX-512 Project")
     main_app = MainApplication(root, width=600, height=350)
     main_app.pack(side="top", fill="both", expand=True)
+    
+    root.mainloop()
+#    main_thread = thread_launch(main_func)
+   # gen_thread = thread_launch(main_app.main.generator)
+    #update_thread = thread_launch(main_app.main.updater)
 
-    main_thread = thread_launch(main_func)
-    gen_thread = thread_launch(main_app.main.generator)
-    update_thread = thread_launch(main_app.main.updater)
-
-    main_thread.join()
+    #main_thread.join()
