@@ -153,8 +153,8 @@ class ControlPanel(tk.Frame):
 
         set_btn = tk.Button(self.entry_frame, text="Set", command=self.Set)
         set_btn.pack(side="right")
-        entry = tk.Entry(self.entry_frame)
-        entry.pack(fill="x")
+        self.entry = tk.Entry(self.entry_frame)
+        self.entry.pack(fill="both")
 
         var = tk.StringVar(self)
         options = ["Light 1","Light 2", "Light 3", "Light 4", "Light 5", "Light 6"]
@@ -179,7 +179,23 @@ class ControlPanel(tk.Frame):
         #serial_thread = thread_launch(main_app.main.serial) 
 
     def Set(self):
-        return
+        text = self.entry.get()
+        text = text.split(',')
+        new_channels = []
+        valid = True
+        for i in text:
+            try:
+                int(i)
+                if int(i) < 0 or int(i) > 512:
+                    self.parent.main.console.insert_text("Invalid input - channels between 0-512")
+                    valid = False
+                new_channels.append(i)
+            except:
+                self.parent.main.console.insert_text("Invalid input - only numeric input")
+                return
+        if valid:
+            self.parent.main.console.insert_text("Valid input")
+       #update light channels 
 
     def Pressed(self):
         global lock
