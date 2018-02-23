@@ -148,6 +148,13 @@ class ControlPanel(tk.Frame):
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
+        self.entry_frame = tk.Frame(self)
+        self.entry_frame.pack(fill="x", expand=True, side="bottom")
+
+        set_btn = tk.Button(self.entry_frame, text="Set", command=self.Set)
+        set_btn.pack(side="right")
+        entry = tk.Entry(self.entry_frame)
+        entry.pack(fill="x")
 
         var = tk.StringVar(self)
         options = ["Light 1","Light 2", "Light 3", "Light 4", "Light 5", "Light 6"]
@@ -170,6 +177,9 @@ class ControlPanel(tk.Frame):
         
         # should add updated bytes to queue from serial
         #serial_thread = thread_launch(main_app.main.serial) 
+
+    def Set(self):
+        return
 
     def Pressed(self):
         global lock
