@@ -205,14 +205,15 @@ class ControlPanel(tk.Frame):
         light = self.var.get()
         lightnum = int(light[-1]) - 1
         
-        self.UpdateInfo('Light ' + str(lightnum) + ':\n'\
+        self.UpdateInfo('Light ' + str(int(lightnum) +1) + ':\n'\
                         'Color:' + str(self.parent.main.lights[lightnum].getColor()) + '\n'\
                         'Channels:' + str(self.parent.main.lights[lightnum].getChannels()))
 
 
     def UpdateInfo(self, text):
-        self.info.delete(1.0,3.0)
+        self.info.delete(1.0,4.0)
         self.info.insert(1.0, text)
+
 
     def Set(self):
         text = self.entry.get()
@@ -220,7 +221,7 @@ class ControlPanel(tk.Frame):
         new_channels = []
         valid = True
 
-        if len(text) > 3:
+        if len(text) is not 3:
             valid = False
         
         for i in text:
