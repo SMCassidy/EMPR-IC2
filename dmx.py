@@ -4,6 +4,7 @@ from threading import Thread, Lock
 from time import sleep
 from random import randint
 import Queue
+import serial
 
 LIGHTS = 6
 TIME = 0.2
@@ -29,7 +30,9 @@ class Main(tk.Frame):
             self.lights[i].setColor(self.initial_colors[i])
 
         self.q = Queue.Queue() 
-
+#        self.ser = serial.Serial('/dev/ttyACM0')
+ #       self.baudrate = 250000
+        
     def light_builder(self):
         x1 = 50
         x2 = 150
@@ -104,9 +107,9 @@ class Main(tk.Frame):
             q.task_done()
 
     def serial(self):
-        #access connection
         while True:
-            new_bytes = '' #read from serial
+  #          new_line = self.ser.readline() #read from serial
+            new_bytes = ''
             q.put(new_bytes)
 
 class Light(object):
