@@ -3,6 +3,8 @@ import Tkinter as tk
 from threading import Thread, Lock
 from time import sleep
 from random import randint
+import Queue
+import serial
 
 LIGHTS = 6
 TIME = 0.2
@@ -25,8 +27,12 @@ class Main(tk.Frame):
         self.initial_colors = ['#DD6666', '#DD8833', '#DDDD33', \
                                '#66DD66', '#6666DD', '#DD66DD' ]
         for i in range(LIGHTS):
-            self.lights[i].change(self.initial_colors[i])
+            self.lights[i].setColor(self.initial_colors[i])
 
+        self.q = Queue.Queue() 
+#        self.ser = serial.Serial('/dev/ttyACM0')
+ #       self.baudrate = 250000
+        
     def light_builder(self):
         x1 = 50
         x2 = 150
@@ -82,10 +88,29 @@ class Main(tk.Frame):
                     b = self.channels[current_channels[i][2]]
                     colors[i] = c(r,g,b)
                     with lock:
-                        self.lights[i].change(colors[i])
+                        self.lights[i].setColor(colors[i])
                 sleep(TIME)
         except:
             return
+
+    def queuer(self):
+
+        '''
+        Processes incoming bytes from queue.
+        Adds them to the global channel dict.
+        '''
+        
+        while True:
+            new_slots = q.get()
+            for i in new_slots:
+                continue        #parse and update channels[]
+            q.task_done()
+
+    def serial(self):
+        while True:
+  #          new_line = self.ser.readline() #read from serial
+            new_bytes = ''
+            q.put(new_bytes)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -97,9 +122,12 @@ class Light(object):
                                           y-75, x2, y], width=2,fill='#000000')
         self.light = self.parent.canvas.create_oval(x1, yl, x2, yl+100, \
                                         fill="white", outline='black', width=7)
-    def change(self,color):
+    def setColor(self,color):
         self.color = color
         self.parent.canvas.itemconfig(self.light,fill=color)
+
+    def getColor(self):
+        return self.color
 
     def getChannels(self):
         return self.channels
@@ -126,15 +154,34 @@ class ControlPanel(tk.Frame):
         w.pack(fill="x", side="bottom")
         w = tk.Label(self, text="Blue", bg="blue", fg="white")
         w.pack(fill="x", side="bottom")
+        test = tk.Button(self,text="Start", command=self.Start)
+        test.pack(fill="x")
         gen = tk.Button(self, text="Random", command=self.gen_begin)
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
-        test = tk.Button(self,text="Test", command=self.Test)
-        test.pack(fill="x")
-        var = tk.StringVar(self)
-        options = ["Light 1","Light 2", "Light 3", "Light 4", "Light 5", "Light 6"]
-        var.set(options[0])
+        
+
+        self.entry_frame = tk.Frame(self)
+        self.entry_frame.pack(fill="x", expand=True, side="bottom")
+
+        set_btn = tk.Button(self.entry_frame, text="Set", command=self.Update)
+        set_btn.pack(side="right")
+        self.entry = tk.Entry(self.entry_frame)
+        self.entry.pack(fill="both")
+
+        self.list_frame = tk.Frame(self)
+        self.list_frame.pack(fill="x", expand=True)
+       
+        self.var = tk.StringVar(self)
+        self.drop = tk.OptionMenu(self.list_frame,self.var, \
+                    'Light 1','Light 2', 'Light 3', 'Light 4', 'Light 5', 'Light 6')
+        self.drop.grid()
+
+        self.info = tk.Text(self, height=3, width=20,relief="raised", bg='#444444', fg='#BBBBBB')
+        self.info.pack(fill="x", side="bottom")
+
+        #We need a text output to show current light, current channels, current colour
 
     def gen_begin(self):
         global lock
@@ -144,8 +191,61 @@ class ControlPanel(tk.Frame):
             self.presslock = False
             self.parent.main.console.insert_text('Random colours...')
 
-    def Test(self):
-        self.parent.main.console.insert_text(str(len(self.parent.main.lights)))
+    def Start(self):
+        gen_thread = thread_launch(main_app.main.generator)
+        update_thread = thread_launch(main_app.main.updater)
+        
+        # should get changes from queue, update the dict
+        #queuer_thread = thread_launch(main_app.main.queuer) 
+        
+        # should add updated bytes to queue from serial
+        #serial_thread = thread_launch(main_app.main.serial) 
+
+    def Update(self):
+       
+        self.Set()
+        
+        light = self.var.get()
+        lightnum = int(light[-1]) - 1
+        
+        self.UpdateInfo('Light ' + str(int(lightnum) +1) + ':\n'\
+                        'Color:' + str(self.parent.main.lights[lightnum].getColor()) + '\n'\
+                        'Channels:' + str(self.parent.main.lights[lightnum].getChannels()))
+
+
+    def UpdateInfo(self, text):
+        self.info.delete(1.0,4.0)
+        self.info.insert(1.0, text)
+
+
+    def Set(self):
+        text = self.entry.get()
+        text = text.split(',')
+        new_channels = []
+        valid = True
+
+        if len(text) is not 3:
+            valid = False
+        
+        for i in text:
+            try:
+                i = int(i)
+                if i < 0 or i > 512:
+                    self.parent.main.console.insert_text("Invalid input - channels between 0-512")
+                    valid = False
+                new_channels.append(i)
+            except:
+                self.parent.main.console.insert_text("Invalid input - only numeric input")
+                return
+        if valid:
+            light = self.var.get()
+            lightnum = int(light[-1]) - 1
+            self.parent.main.console.insert_text("Valid input")
+            self.parent.main.console.insert_text(str(new_channels))
+            self.parent.main.console.insert_text(light)
+            self.parent.main.lights[lightnum].setChannels(new_channels)
+            self.parent.main.console.insert_text("Light " + str(lightnum + 1) + \
+                                    " channels updated to " + str(new_channels))
 
     def Pressed(self):
         global lock
@@ -203,9 +303,10 @@ if __name__ == "__main__":
     root.wm_title("DMX-512 Project")
     main_app = MainApplication(root, width=600, height=350)
     main_app.pack(side="top", fill="both", expand=True)
+    
+    root.mainloop()
+#    main_thread = thread_launch(main_func)
+   # gen_thread = thread_launch(main_app.main.generator)
+    #update_thread = thread_launch(main_app.main.updater)
 
-    main_thread = thread_launch(main_func)
-    gen_thread = thread_launch(main_app.main.generator)
-    update_thread = thread_launch(main_app.main.updater)
-
-    main_thread.join()
+    #main_thread.join()
