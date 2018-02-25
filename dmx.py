@@ -29,10 +29,10 @@ class Main(tk.Frame):
         for i in range(LIGHTS):
             self.lights[i].setColor(self.initial_colors[i])
 
-        self.q = Queue.Queue() 
+        self.q = Queue.Queue()
 #        self.ser = serial.Serial('/dev/ttyACM0')
  #       self.baudrate = 250000
-        
+
     def light_builder(self):
         x1 = 50
         x2 = 150
@@ -99,7 +99,7 @@ class Main(tk.Frame):
         Processes incoming bytes from queue.
         Adds them to the global channel dict.
         '''
-        
+
         while True:
             new_slots = q.get()
             for i in new_slots:
@@ -160,7 +160,7 @@ class ControlPanel(tk.Frame):
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
-        
+
 
         self.entry_frame = tk.Frame(self)
         self.entry_frame.pack(fill="x", expand=True, side="bottom")
@@ -172,7 +172,7 @@ class ControlPanel(tk.Frame):
 
         self.list_frame = tk.Frame(self)
         self.list_frame.pack(fill="x", expand=True)
-       
+
         self.var = tk.StringVar(self)
         self.drop = tk.OptionMenu(self.list_frame,self.var, \
                     'Light 1','Light 2', 'Light 3', 'Light 4', 'Light 5', 'Light 6')
@@ -194,20 +194,20 @@ class ControlPanel(tk.Frame):
     def Start(self):
         gen_thread = thread_launch(main_app.main.generator)
         update_thread = thread_launch(main_app.main.updater)
-        
+
         # should get changes from queue, update the dict
-        #queuer_thread = thread_launch(main_app.main.queuer) 
-        
+        #queuer_thread = thread_launch(main_app.main.queuer)
+
         # should add updated bytes to queue from serial
-        #serial_thread = thread_launch(main_app.main.serial) 
+        #serial_thread = thread_launch(main_app.main.serial)
 
     def Update(self):
-       
+
         self.Set()
-        
+
         light = self.var.get()
         lightnum = int(light[-1]) - 1
-        
+
         self.UpdateInfo('Light ' + str(int(lightnum) +1) + ':\n'\
                         'Color:' + str(self.parent.main.lights[lightnum].getColor()) + '\n'\
                         'Channels:' + str(self.parent.main.lights[lightnum].getChannels()))
@@ -226,7 +226,7 @@ class ControlPanel(tk.Frame):
 
         if len(text) is not 3:
             valid = False
-        
+
         for i in text:
             try:
                 i = int(i)
@@ -240,9 +240,9 @@ class ControlPanel(tk.Frame):
         if valid:
             light = self.var.get()
             lightnum = int(light[-1]) - 1
-            self.parent.main.console.insert_text("Valid input")
-            self.parent.main.console.insert_text(str(new_channels))
-            self.parent.main.console.insert_text(light)
+            #self.parent.main.console.insert_text("Valid input")
+            #self.parent.main.console.insert_text(str(new_channels))
+            #self.parent.main.console.insert_text(light)
             self.parent.main.lights[lightnum].setChannels(new_channels)
             self.parent.main.console.insert_text("Light " + str(lightnum + 1) + \
                                     " channels updated to " + str(new_channels))
@@ -303,7 +303,7 @@ if __name__ == "__main__":
     root.wm_title("DMX-512 Project")
     main_app = MainApplication(root, width=600, height=350)
     main_app.pack(side="top", fill="both", expand=True)
-    
+
     root.mainloop()
 #    main_thread = thread_launch(main_func)
    # gen_thread = thread_launch(main_app.main.generator)
