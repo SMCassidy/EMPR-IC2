@@ -114,7 +114,7 @@ class Main(tk.Frame):
             new_line = self.ser.readline() #read from serial
             print(new_line)
             new_bytes = ''
-            self.q.put(new_bytes)
+            self.q.put(new_line)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -196,7 +196,7 @@ class ControlPanel(tk.Frame):
             self.parent.main.console.insert_text('Random colours...')
 
     def Start(self):
-        gen_thread = thread_launch(main_app.main.generator)
+        #gen_thread = thread_launch(main_app.main.generator)
         update_thread = thread_launch(main_app.main.updater)
 
         # should get changes from queue, update the dict
