@@ -30,8 +30,10 @@ class Main(tk.Frame):
             self.lights[i].setColor(self.initial_colors[i])
 
         self.q = Queue.Queue()
-#        self.ser = serial.Serial('/dev/ttyACM0')
- #       self.baudrate = 250000
+        self.ser = serial.Serial('/dev/ttyACM0')
+        self.ser.baudrate = 250000
+        self.ser.stopbits = 1
+        self.ser.timeout = 1
 
     def light_builder(self):
         x1 = 50
@@ -101,16 +103,18 @@ class Main(tk.Frame):
         '''
 
         while True:
-            new_slots = q.get()
+            new_slots = self.q.get()
+            #self.console.insert_text(str(new_slots))
             for i in new_slots:
                 continue        #parse and update channels[]
-            q.task_done()
+            self.q.task_done()
 
     def serial(self):
         while True:
-  #          new_line = self.ser.readline() #read from serial
+            new_line = self.ser.readline() #read from serial
+            print(new_line)
             new_bytes = ''
-            q.put(new_bytes)
+            self.q.put(new_bytes)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -196,10 +200,10 @@ class ControlPanel(tk.Frame):
         update_thread = thread_launch(main_app.main.updater)
 
         # should get changes from queue, update the dict
-        #queuer_thread = thread_launch(main_app.main.queuer)
+        queuer_thread = thread_launch(main_app.main.queuer)
 
         # should add updated bytes to queue from serial
-        #serial_thread = thread_launch(main_app.main.serial)
+        serial_thread = thread_launch(main_app.main.serial)
 
     def Update(self):
 
