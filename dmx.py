@@ -81,7 +81,7 @@ class Main(tk.Frame):
                 colors = ['','','','','','']
                 current_channels = []
                 c = lambda r, g, b: '#%02X%02X%02X' % (r,g,b)
-
+                #print("UPDATER FINE")
                 #Get Light addresses, Produce hexstring, Update light
                 for i in range(len(self.lights)):
                     current_channels.append(self.lights[i].getChannels())
@@ -105,16 +105,31 @@ class Main(tk.Frame):
         while True:
             new_slots = self.q.get()
             #self.console.insert_text(str(new_slots))
-            for i in new_slots:
-                continue        #parse and update channels[]
-            self.q.task_done()
+            #print("LENGTH:" + str(len(new_slots)))
+            if len(new_slots) < 38:
+                self.q.task_done()
+            else:
+                arr = new_slots.split('-')
+                arr = arr[1:-1]
+                for i in range(len(arr)):
+                    try:
+                        self.channels[i] = int(arr[i])
+                    except:
+                        continue
+                #print(self.channels)
+                #for i in range 
+                #for i in new_slots:
+                    #print(i)
+                #continue        #parse and update channels[]
+                self.q.task_done()
 
     def serial(self):
+        #self.ser.open()
         while True:
-            new_line = self.ser.readline() #read from serial
-            print(new_line)
-            new_bytes = ''
-            self.q.put(new_line)
+            line = self.ser.readline() #read from serial
+            #print(line)
+            #new_bytes = ''
+            self.q.put(line)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
