@@ -130,13 +130,12 @@ class Main(tk.Frame):
             line = self.ser.readline() #read from serial
             line = line.split('-')
             line = line[1:-1]
-            print(line)
+            #print(line)
             for i in range(len(line)):
                 try:
                     self.channels[i] = int(line[i])
                 except:
                     continue
-            #new_bytes = ''
             #self.q.put(line)
 
 class Light(object):
@@ -171,6 +170,7 @@ class ControlPanel(tk.Frame):
         self.pack(fill="both", expand=True, side="left")
         self.presslock = True
         self.gen = False
+        self.serial = False
         title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, \
                                     font="bold", bg="black", fg="white")
         title.pack(fill="both")
@@ -184,6 +184,8 @@ class ControlPanel(tk.Frame):
         test = tk.Button(self,text="Start", command=self.Start)
         test.pack(fill="x")
         gen = tk.Button(self, text="Random", command=self.gen_begin)
+        gen.pack(fill="x")
+        gen = tk.Button(self, text="Serial", command=self.serial_begin)
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
@@ -211,15 +213,27 @@ class ControlPanel(tk.Frame):
         #We need a text output to show current light, current channels, current colour
 
     def gen_begin(self):
-        global lock
+        global randlock
+        if self.gen == False:
+            randlock.acquire()
+            self.gen = True
+            self.parent.main.console.insert_text('Random colours...')
         if not self.gen:
             lock.release()
             self.gen = True
             self.presslock = False
-            self.parent.main.console.insert_text('Random colours...')
+            self.parent.main.console.insert_text('Random stopped...')
+
+
+    def serial_begin(self):
+        global lock
+        if not self.serial:
+            lock.release()
+            self.serial = True
+            self.parent.main.console.insert_text('Serial begin...')
 
     def Start(self):
-        #gen_thread = thread_launch(main_app.main.generator)
+        gen_thread = thread_launch(main_app.main.generator)
         update_thread = thread_launch(main_app.main.updater)
 
         # should get changes from queue, update the dict
@@ -325,6 +339,7 @@ def main_func():
     root.mainloop()
 
 if __name__ == "__main__":
+    randlock = Lock()
     lock = Lock()
     root = tk.Tk()
     root.wm_title("DMX-512 Project")
