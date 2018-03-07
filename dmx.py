@@ -21,6 +21,8 @@ class Main(tk.Frame):
         self.channels = { 0:255,  1:255,  2:255,  3:255,  4:255,  5:255, \
                           6:255,  7:255,  8:255,  9:255, 10:255, 11:255, \
                          12:255, 13:255, 14:255, 15:255, 16:255, 17:255  }
+        for i in range(512):
+            self.channels[i] = 255
 
         self.lights = self.light_builder()
         self.initial_colors = ['#DD6666', '#DD8833', '#DDDD33', \
@@ -149,11 +151,11 @@ class ControlPanel(tk.Frame):
         title.config(highlightbackground="red")
         self.colours = tk.Frame(self)
         self.colours.pack(fill="x", side="bottom")
-        self.w_blue = tk.Label(self.colours, text="Blue", bg="blue", fg="white")
+        self.w_blue = tk.Label(self.colours, text="Blue", bg="blue", fg="white", font = "Courier 10 bold")
         self.w_blue.pack(fill="x", side="bottom")
-        self.w_green = tk.Label(self.colours, text="Green", bg="green", fg="black")
+        self.w_green = tk.Label(self.colours, text="Green", bg="green", fg="black", font = "Courier 10 bold")
         self.w_green.pack(fill="x", side="bottom")
-        self.w_red = tk.Label(self.colours, text="Red", bg="red", fg="white")
+        self.w_red = tk.Label(self.colours, text="Red", bg="red", fg="white", font = "Courier 10 bold")
         self.w_red.pack(fill="x", side="bottom")
 
         test = tk.Button(self,text="Start", command=self.Start)
@@ -165,24 +167,31 @@ class ControlPanel(tk.Frame):
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
 
-        self.entry_frame = tk.Frame(self)
-        self.entry_frame.pack(fill="x", expand=True, side="bottom")
-
-        set_btn = tk.Button(self.entry_frame, text="Set", command=self.Update)
-        set_btn.pack(side="right")
-        self.entry = tk.Entry(self.entry_frame)
-        self.entry.pack(fill="both")
+        #Enter big empty frame here
+        frm = tk.Frame(self, height=38, bg='#333333')
+        frm.pack(fill="x")
 
         self.list_frame = tk.Frame(self)
-        self.list_frame.pack(fill="x", expand=True)
+        self.list_frame.pack(fill="x")
 
         self.var = tk.StringVar(self)
         self.drop = tk.OptionMenu(self.list_frame,self.var, \
                     'Light 1','Light 2', 'Light 3', 'Light 4', 'Light 5', 'Light 6')
         self.drop.grid()
 
+        self.entry_frame = tk.Frame(self)
+        self.entry_frame.pack(fill="x")
+
+        set_btn = tk.Button(self.entry_frame, text="Set", command=self.Update)
+        set_btn.pack(side="right")
+        self.entry = tk.Entry(self.entry_frame)
+        self.entry.pack(fill="both")
+
+        frm = tk.Frame(self, height=20, bg='#333333')
+        frm.pack(fill="x")
+
         self.info = tk.Text(self, height=3, width=20,relief="raised", bg='#444444', fg='#BBBBBB')
-        self.info.pack(fill="x", side="bottom")
+        self.info.pack(fill="x")
 
         #We need a text output to show current light, current channels, current colour
 
