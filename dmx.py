@@ -30,10 +30,10 @@ class Main(tk.Frame):
             self.lights[i].setColor(self.initial_colors[i])
 
         self.q = Queue.Queue()
-        self.ser = serial.Serial('/dev/ttyACM0')
-        self.ser.baudrate = 250000
-        self.ser.stopbits = 1
-        self.ser.timeout = 1
+#        self.ser = serial.Serial('/dev/ttyACM0')
+ #       self.ser.baudrate = 250000
+  #      self.ser.stopbits = 1
+   #     self.ser.timeout = 1
 
     def light_builder(self):
         x1 = 50
@@ -58,14 +58,14 @@ class Main(tk.Frame):
         Produces random values and adds them to the global channels dict.
         Ideally the dict will be updated by the incoming serial read thread.
         '''
-
         sleep(TIME)
         r = lambda: randint(0,255)
         while True:
             try:
-                for c in self.channels:
-                    self.channels[c] = r()
-                sleep(0.2)
+                with randlock:
+                    for c in self.channels:
+                        self.channels[c] = r()
+                    sleep(0.2)
             except:
                 return
 
@@ -89,8 +89,8 @@ class Main(tk.Frame):
                     g = self.channels[current_channels[i][1]]
                     b = self.channels[current_channels[i][2]]
                     colors[i] = c(r,g,b)
-                    with lock:
-                        self.lights[i].setColor(colors[i])
+                    #with lock:
+                    self.lights[i].setColor(colors[i])
                 sleep(TIME)
         except:
             return
@@ -169,7 +169,7 @@ class ControlPanel(tk.Frame):
         self.parent = parent
         self.pack(fill="both", expand=True, side="left")
         self.presslock = True
-        self.gen = False
+        self.gen = True 
         self.serial = False
         title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, \
                                     font="bold", bg="black", fg="white")
@@ -214,16 +214,15 @@ class ControlPanel(tk.Frame):
 
     def gen_begin(self):
         global randlock
+
         if self.gen == False:
             randlock.acquire()
             self.gen = True
             self.parent.main.console.insert_text('Random colours...')
-        if not self.gen:
-            lock.release()
-            self.gen = True
-            self.presslock = False
+        else:
+            randlock.release()
+            self.gen = False
             self.parent.main.console.insert_text('Random stopped...')
-
 
     def serial_begin(self):
         global lock
@@ -240,7 +239,7 @@ class ControlPanel(tk.Frame):
         #queuer_thread = thread_launch(main_app.main.queuer)
 
         # should add updated bytes to queue from serial
-        serial_thread = thread_launch(main_app.main.serial)
+        #serial_thread = thread_launch(main_app.main.serial)
 
     def Update(self):
 
@@ -290,8 +289,8 @@ class ControlPanel(tk.Frame):
 
     def Pressed(self):
         global lock
-        if self.gen == False:
-            return
+        #if self.gen == False:
+         #   return
         if not self.presslock:
             lock.acquire()
             self.presslock = True
