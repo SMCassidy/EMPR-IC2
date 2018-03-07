@@ -41,7 +41,7 @@ class Main(tk.Frame):
         y = 150
         lights = []
         initial_channels = [[0, 1, 2],[ 3, 4, 5],[ 6, 7, 8], \
-                            [9,10,11],[12,13,14],[15,16,17]]
+                            [9,10,11],[12,13,14],[5,10,14]]
         for i in range(LIGHTS):
             if i == 3:
                 y = 305
@@ -106,11 +106,12 @@ class Main(tk.Frame):
             new_slots = self.q.get()
             #self.console.insert_text(str(new_slots))
             #print("LENGTH:" + str(len(new_slots)))
-            if len(new_slots) < 38:
+            if len(new_slots) < 30:
                 self.q.task_done()
             else:
                 arr = new_slots.split('-')
                 arr = arr[1:-1]
+            #    print(str(arr))
                 for i in range(len(arr)):
                     try:
                         self.channels[i] = int(arr[i])
@@ -127,9 +128,16 @@ class Main(tk.Frame):
         #self.ser.open()
         while True:
             line = self.ser.readline() #read from serial
-            #print(line)
+            line = line.split('-')
+            line = line[1:-1]
+            print(line)
+            for i in range(len(line)):
+                try:
+                    self.channels[i] = int(line[i])
+                except:
+                    continue
             #new_bytes = ''
-            self.q.put(line)
+            #self.q.put(line)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -215,7 +223,7 @@ class ControlPanel(tk.Frame):
         update_thread = thread_launch(main_app.main.updater)
 
         # should get changes from queue, update the dict
-        queuer_thread = thread_launch(main_app.main.queuer)
+        #queuer_thread = thread_launch(main_app.main.queuer)
 
         # should add updated bytes to queue from serial
         serial_thread = thread_launch(main_app.main.serial)
