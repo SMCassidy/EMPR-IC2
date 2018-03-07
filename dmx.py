@@ -28,7 +28,8 @@ class Main(tk.Frame):
                                '#66DD66', '#6666DD', '#DD66DD' ]
         for i in range(LIGHTS):
             self.lights[i].setColor(self.initial_colors[i])
-
+        global randlock
+        randlock.acquire()
         self.q = Queue.Queue()
 #        self.ser = serial.Serial('/dev/ttyACM0')
  #       self.ser.baudrate = 250000
@@ -118,7 +119,7 @@ class Main(tk.Frame):
                     except:
                         continue
                 #print(self.channels)
-                #for i in range 
+                #for i in range
                 #for i in new_slots:
                     #print(i)
                 #continue        #parse and update channels[]
@@ -169,7 +170,7 @@ class ControlPanel(tk.Frame):
         self.parent = parent
         self.pack(fill="both", expand=True, side="left")
         self.presslock = True
-        self.gen = True 
+        self.gen = True
         self.serial = False
         title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, \
                                     font="bold", bg="black", fg="white")
@@ -218,11 +219,11 @@ class ControlPanel(tk.Frame):
         if self.gen == False:
             randlock.acquire()
             self.gen = True
-            self.parent.main.console.insert_text('Random colours...')
+            self.parent.main.console.insert_text('Random paused...')
         else:
             randlock.release()
             self.gen = False
-            self.parent.main.console.insert_text('Random stopped...')
+            self.parent.main.console.insert_text('Random colours...')
 
     def serial_begin(self):
         global lock
