@@ -3,7 +3,6 @@ import Tkinter as tk
 from threading import Thread, Lock
 from time import sleep
 from random import randint
-import Queue
 import serial
 
 LIGHTS = 6
@@ -28,9 +27,9 @@ class Main(tk.Frame):
                                '#66DD66', '#6666DD', '#DD66DD' ]
         for i in range(LIGHTS):
             self.lights[i].setColor(self.initial_colors[i])
-        global randlock
+        global randlock, serlock
         randlock.acquire()
-        self.q = Queue.Queue()
+        serlock.acquire()
 #        self.ser = serial.Serial('/dev/ttyACM0')
  #       self.ser.baudrate = 250000
   #      self.ser.stopbits = 1
@@ -90,45 +89,20 @@ class Main(tk.Frame):
                     g = self.channels[current_channels[i][1]]
                     b = self.channels[current_channels[i][2]]
                     colors[i] = c(r,g,b)
-                    #with lock:
-                    self.lights[i].setColor(colors[i])
+                    with lock:
+                        self.lights[i].setColor(colors[i])
                 sleep(TIME)
         except:
             return
 
-    def queuer(self):
-
-        '''
-        Processes incoming bytes from queue.
-        Adds them to the global channel dict.
-        '''
-
-        while True:
-            new_slots = self.q.get()
-            #self.console.insert_text(str(new_slots))
-            #print("LENGTH:" + str(len(new_slots)))
-            if len(new_slots) < 30:
-                self.q.task_done()
-            else:
-                arr = new_slots.split('-')
-                arr = arr[1:-1]
-            #    print(str(arr))
-                for i in range(len(arr)):
-                    try:
-                        self.channels[i] = int(arr[i])
-                    except:
-                        continue
-                #print(self.channels)
-                #for i in range
-                #for i in new_slots:
-                    #print(i)
-                #continue        #parse and update channels[]
-                self.q.task_done()
-
     def serial(self):
-        #self.ser.open()
+
+        '''
+        Reads from serial and updates global channels dict.
+        '''
+
         while True:
-            line = self.ser.readline() #read from serial
+            line = self.ser.readline()
             line = line.split('-')
             line = line[1:-1]
             #print(line)
@@ -137,7 +111,6 @@ class Main(tk.Frame):
                     self.channels[i] = int(line[i])
                 except:
                     continue
-            #self.q.put(line)
 
 class Light(object):
     def __init__(self, parent, x1, x2, y, channels):
@@ -164,12 +137,10 @@ class Light(object):
 
 class ControlPanel(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
-        global lock
-        lock.acquire()
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.pack(fill="both", expand=True, side="left")
-        self.presslock = True
+        self.presslock = False
         self.gen = True
         self.serial = False
         title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, \
@@ -340,6 +311,7 @@ def main_func():
 
 if __name__ == "__main__":
     randlock = Lock()
+    serlock = Lock()
     lock = Lock()
     root = tk.Tk()
     root.wm_title("DMX-512 Project")
