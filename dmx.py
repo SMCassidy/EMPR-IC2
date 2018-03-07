@@ -58,6 +58,7 @@ class Main(tk.Frame):
         Produces random values and adds them to the global channels dict.
         Ideally the dict will be updated by the incoming serial read thread.
         '''
+
         sleep(TIME)
         r = lambda: randint(0,255)
         while True:
@@ -81,7 +82,6 @@ class Main(tk.Frame):
                 colors = ['','','','','','']
                 current_channels = []
                 c = lambda r, g, b: '#%02X%02X%02X' % (r,g,b)
-                #print("UPDATER FINE")
                 #Get Light addresses, Produce hexstring, Update light
                 for i in range(len(self.lights)):
                     current_channels.append(self.lights[i].getChannels())
@@ -91,6 +91,7 @@ class Main(tk.Frame):
                     colors[i] = c(r,g,b)
                     with lock:
                         self.lights[i].setColor(colors[i])
+                self.parent.control.UpdateColourLabels()
                 sleep(TIME)
         except:
             return
@@ -105,7 +106,6 @@ class Main(tk.Frame):
             line = self.ser.readline()
             line = line.split('-')
             line = line[1:-1]
-            #print(line)
             for i in range(len(line)):
                 try:
                     self.channels[i] = int(line[i])
@@ -147,12 +147,15 @@ class ControlPanel(tk.Frame):
                                     font="bold", bg="black", fg="white")
         title.pack(fill="both")
         title.config(highlightbackground="red")
-        w = tk.Label(self, text="Red", bg="red", fg="white")
-        w.pack(fill="x", side="bottom")
-        w = tk.Label(self, text="Green", bg="green", fg="black")
-        w.pack(fill="x", side="bottom")
-        w = tk.Label(self, text="Blue", bg="blue", fg="white")
-        w.pack(fill="x", side="bottom")
+        self.colours = tk.Frame(self)
+        self.colours.pack(fill="x", side="bottom")
+        self.w_blue = tk.Label(self.colours, text="Blue", bg="blue", fg="white")
+        self.w_blue.pack(fill="x", side="bottom")
+        self.w_green = tk.Label(self.colours, text="Green", bg="green", fg="black")
+        self.w_green.pack(fill="x", side="bottom")
+        self.w_red = tk.Label(self.colours, text="Red", bg="red", fg="white")
+        self.w_red.pack(fill="x", side="bottom")
+
         test = tk.Button(self,text="Start", command=self.Start)
         test.pack(fill="x")
         gen = tk.Button(self, text="Random", command=self.gen_begin)
@@ -161,7 +164,6 @@ class ControlPanel(tk.Frame):
         gen.pack(fill="x")
         pause = tk.Button(self, text="Pause", command=self.Pressed)
         pause.pack(fill="x")
-
 
         self.entry_frame = tk.Frame(self)
         self.entry_frame.pack(fill="x", expand=True, side="bottom")
@@ -207,9 +209,6 @@ class ControlPanel(tk.Frame):
         gen_thread = thread_launch(main_app.main.generator)
         update_thread = thread_launch(main_app.main.updater)
 
-        # should get changes from queue, update the dict
-        #queuer_thread = thread_launch(main_app.main.queuer)
-
         # should add updated bytes to queue from serial
         #serial_thread = thread_launch(main_app.main.serial)
 
@@ -224,11 +223,23 @@ class ControlPanel(tk.Frame):
                         'Color:' + str(self.parent.main.lights[lightnum].getColor()) + '\n'\
                         'Channels:' + str(self.parent.main.lights[lightnum].getChannels()))
 
-
     def UpdateInfo(self, text):
         self.info.delete(1.0,4.0)
         self.info.insert(1.0, text)
 
+    def UpdateColourLabels(self):
+        light = self.var.get()
+        try:
+            lightnum = int(light[-1]) - 1
+        except:
+            return
+        text = ['Red:    ', 'Green:    ', 'Blue:    ']
+        labels = [self.w_red, self.w_green, self.w_blue]
+        chans = self.parent.main.lights[lightnum].getChannels()
+        for i in range(3):
+            val = '0x%02x' % self.parent.main.channels[chans[i]]
+            labels[i]['text'] = text[i] + val
+        return
 
     def Set(self):
         text = self.entry.get()
@@ -252,17 +263,13 @@ class ControlPanel(tk.Frame):
         if valid:
             light = self.var.get()
             lightnum = int(light[-1]) - 1
-            #self.parent.main.console.insert_text("Valid input")
-            #self.parent.main.console.insert_text(str(new_channels))
-            #self.parent.main.console.insert_text(light)
             self.parent.main.lights[lightnum].setChannels(new_channels)
             self.parent.main.console.insert_text("Light " + str(lightnum + 1) + \
                                     " channels updated to " + str(new_channels))
 
     def Pressed(self):
         global lock
-        #if self.gen == False:
-         #   return
+
         if not self.presslock:
             lock.acquire()
             self.presslock = True
