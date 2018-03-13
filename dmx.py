@@ -92,7 +92,7 @@ class Main(tk.Frame):
                     with lock:
                         self.lights[i].setColor(colors[i])
                 self.parent.control.UpdateColourLabels()
-                #sleep(TIME)
+                sleep(0.05)
         except:
             return
 
@@ -106,7 +106,7 @@ class Main(tk.Frame):
             line = self.ser.readline()
             line = line.split('-')
             line = line[1:-1]
-            print(line)
+            #print(line)
             for i in range(len(line)):
                 try:
                     self.channels[i] = int(line[i])
@@ -145,8 +145,9 @@ class ControlPanel(tk.Frame):
         self.gen = False
         self.serial = False
 
-        global randlock 
+        global randlock, lock
         randlock.acquire()
+        lock.acquire()
 
         title = tk.Label(self, text="  EMPR IC2  \n\n DMX-512 ", bd=3, \
                                     font="bold", bg="black", fg="white")
@@ -294,12 +295,12 @@ class ControlPanel(tk.Frame):
     def Pressed(self):
         global lock
 
-        if not self.presslock:
-            lock.acquire()
+        if self.presslock == False:
+            lock.release()
             self.presslock = True
             self.parent.main.console.insert_text('Paused...')
         else:
-            lock.release()
+            lock.acquire()
             self.presslock = False
             self.parent.main.console.insert_text('Unpaused...')
 
